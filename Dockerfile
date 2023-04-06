@@ -74,37 +74,6 @@ RUN python -m pip --no-cache-dir install --no-deps -r requirements.txt.lock
 # RUN python -m pip install --no-deps --force-reinstall --upgrade opencv-python==4.5.2.54
 
 # ==================================================================
-# Rust
-# ------------------------------------------------------------------
-# RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -y | sh
-# RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
-
-# ==================================================================
-# Kaggle
-# ------------------------------------------------------------------
-#RUN python -m pip install kaggle==1.5.12
-#ENV KAGGLE_USERNAME olegsinavski
-#ENV KAGGLE_KEY 63f692b5d2f5b055bc31258a5db26d23
-
-# ==================================================================
-# Bazel
-# ------------------------------------------------------------------
-#RUN curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg; \
-#    mv bazel.gpg /etc/apt/trusted.gpg.d/ ;\
-#    echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list; \
-#    apt-get update; \
-#    apt-get install -y \
-#      bazel-4.1.0
-#RUN ln -s /usr/bin/bazel-4.1.0 /usr/bin/bazel
-
-# ==================================================================
-# Hyperparameters with ray
-# ------------------------------------------------------------------
-#RUN python -m pip install ray[rllib]==1.3.0 nevergrad==0.4.3
-#EXPOSE 8265
-
-
-# ==================================================================
 # GUI
 # ------------------------------------------------------------------
 RUN apt-get install --no-install-recommends -y libsm6 libxext6 libxrender-dev mesa-utils
