@@ -142,7 +142,7 @@ COPY scripts/jupyter_notebook_config.py /etc/jupyter/
 # ==================================================================
 # Add the src folder to pythonpath
 # ------------------------------------------------------------------
-ENV PYTHONPATH "${PYTHONPATH}:/sota/src"
+ENV PYTHONPATH "${PYTHONPATH}:/example/example"
 
 ## ==================================================================
 ## Startup

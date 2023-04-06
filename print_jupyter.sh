@@ -3,7 +3,7 @@ max_retries=5
 retry_interval=1
 
 for i in $(seq 1 $max_retries); do
-    output=$(docker exec -it sota_sandbox jupyter server list 2>/dev/null)
+    output=$(docker exec -it mlgl_sandbox jupyter server list 2>/dev/null)
     if [ $? -eq 0 ]; then
         port_token=$(echo "$output" | grep -oP '\d+\/\?token=[a-zA-Z0-9]+')
         echo "Jupyter is available at $hostip:${port_token}"

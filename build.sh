@@ -14,4 +14,4 @@ do
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-docker build -t sota_sandbox $DIR
+docker build -t mlgl_sandbox $DIR

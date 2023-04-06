@@ -22,12 +22,12 @@ Enable default gpu support by picking nvidia runtime:
 Make docker daemon available on a fixed port:
 `https://dockerlabs.collabnix.com/beginners/components/daemon/access-daemon-externally.html`
 
-# run MNIST training
+# run MNIST training and some random examples
 
 ```bash
-python /sota/src/sota/mnist/mnist_experiments/mnist_research_sandbox.py
+python /example/mnist.py
+python /example/examples.py
 ```
-
 
 # How VNC works
 `xvfb` - create a virtual X11 display

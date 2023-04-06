@@ -13,7 +13,7 @@ do
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-docker stop sota_sandbox >/dev/null 2>&1 || true && docker rm sota_sandbox >/dev/null 2>&1 || true
+docker stop mlgl_sandbox >/dev/null 2>&1 || true && docker rm mlgl_sandbox >/dev/null 2>&1 || true
 
 $DIR/build.sh
 
@@ -29,7 +29,7 @@ if [ -z "$pub_key_file" ]; then
   echo "No public key file found in ~/.ssh directory - ssh will not work"
 fi
 
-docker run  --name sota_sandbox -d -it \
+docker run  --name mlgl_sandbox -d -it \
   --gpus all \
   -p 8080:8080 \
   -p 5900:5900 \
@@ -37,12 +37,12 @@ docker run  --name sota_sandbox -d -it \
   -p 0.0.0.0:8265:8265 \
   -p 0.0.0.0:6006:6006 \
   -e AUTHORIZED_KEYS="`cat $pub_key_file`" \
-  -v $DIR:/sota \
+  -v $DIR:/example \
   --ipc=host \
-  -v ~/.sota_sandbox_home:/root \
-  sota_sandbox bash >/dev/null
+  -v ~/.mlgl_sandbox_home:/root \
+  mlgl_sandbox bash >/dev/null
 
-SANDBOX_IP="$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' sota_sandbox)"
+SANDBOX_IP="$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' mlgl_sandbox)"
 
 # after a rebuild, we should remove the ssh identity
 ssh-keygen -f "$HOME/.ssh/known_hosts" -R $SANDBOX_IP
