@@ -5,6 +5,8 @@ This image is based on
  - CUDA 11.4
  - Torch 1.13.1
 
+Emulate ssh-ing into a remote machine. This is as opposed to using docker API, although one can still use it.
+
 Features:
  - GPU training with Torch
  - opengl and graphics (`glxgears` works)
