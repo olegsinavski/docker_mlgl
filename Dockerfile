@@ -106,11 +106,6 @@ EXPOSE 8080
 EXPOSE 8894
 COPY scripts/jupyter_notebook_config.py /etc/jupyter/
 
-# ==================================================================
-# Add the src folder to pythonpath
-# ------------------------------------------------------------------
-ENV PYTHONPATH "${PYTHONPATH}:/example/example"
-
 ## ==================================================================
 ## Startup
 ## ------------------------------------------------------------------
@@ -125,4 +120,7 @@ RUN ldconfig && \
     apt-get autoremove && \
     rm -rf /var/lib/apt/lists/* /tmp/* ~/*
 
+# https://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile
+# The ENTRYPOINT specifies a command that will always be executed when the container starts.
+# The CMD specifies arguments that will be fed to the ENTRYPOINT.
 ENTRYPOINT ["/on_docker_start.sh"]
