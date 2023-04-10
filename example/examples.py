@@ -6,6 +6,9 @@ import cv2
 import pandas as pd
 from PIL import Image
 import sklearn
+import sklearn.model_selection
+import sklearn.datasets
+import sklearn.metrics
 import seaborn as sns
 import torch
 import torchvision
