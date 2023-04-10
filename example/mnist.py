@@ -26,9 +26,9 @@ class Net(nn.Module):
 
 def train_mnist():
     # Define the training parameters
-    batch_size = 64
+    batch_size = 256
     learning_rate = 0.01
-    num_epochs = 10
+    num_epochs = 3
 
     # Load the MNIST dataset
     train_dataset = datasets.MNIST(root='./data', train=True, transform=transforms.ToTensor(), download=True)
