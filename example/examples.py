@@ -5,9 +5,7 @@ import numpy as np
 import cv2
 import pandas as pd
 from PIL import Image
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+import sklearn
 import seaborn as sns
 import torch
 import torchvision
@@ -59,14 +57,14 @@ def main():
     img_pil.show()
 
     # test scikit-learn
-    iris = datasets.load_iris()
+    iris = sklearn.datasets.load_iris()
     X = iris.data
     y = iris.target
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    clf = svm.SVC(kernel='linear', C=1)
+    X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y, test_size=0.2, random_state=42)
+    clf = sklearn.svm.SVC(kernel='linear', C=1)
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
+    acc = sklearn.metrics.accuracy_score(y_test, y_pred)
     assert acc > 0.8
 
     # test scipy
