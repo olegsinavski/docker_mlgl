@@ -19,8 +19,8 @@ def main():
     """
     # test lz4
     data = b'Hello World'
-    compressed_data = lz4.compress(data)
-    decompressed_data = lz4.decompress(compressed_data)
+    compressed_data = lz4.frame.compress(data)
+    decompressed_data = lz4.frame.decompress(compressed_data)
     assert data == decompressed_data
 
     # test matplotlib
