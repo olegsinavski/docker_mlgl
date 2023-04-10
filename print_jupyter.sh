@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+set -e
 hostip="<hostip>"
 max_retries=5
 retry_interval=1

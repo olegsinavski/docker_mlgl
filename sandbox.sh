@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 set -e
 
 # Robust way of locating script folder
