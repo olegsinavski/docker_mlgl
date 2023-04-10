@@ -68,10 +68,8 @@ RUN ln -sf /usr/local/bin/pip3.9 /usr/local/bin/pip
 # pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt
 COPY requirements.txt.lock requirements.txt.lock
 RUN python -m pip --no-cache-dir install --no-deps -r requirements.txt.lock
-
+# Install simd pillow separately
 # RUN CC="cc -mavx2" python -m pip install --no-deps --force-reinstall --upgrade pillow-simd==7.0.0.post3
-# fix opencv imshow
-# RUN python -m pip install --no-deps --force-reinstall --upgrade opencv-python==4.5.2.54
 
 # ==================================================================
 # GUI

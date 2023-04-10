@@ -13,15 +13,8 @@ do
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-docker stop mlgl_sandbox >/dev/null 2>&1 || true && docker rm mlgl_sandbox >/dev/null 2>&1 || true
-
+$DIR/stop_sandbox.sh
 $DIR/build.sh
-
-# how to get gpus?
-# make nvidia-smi work on the host.
-# https://stackoverflow.com/questions/59691207/docker-build-with-nvidia-runtime 
-# https://github.com/NVIDIA/nvidia-docker/issues/1243
-#
 
 pub_key_file=$(find ~/.ssh -type f -name "*.pub" | head -n 1)
 
