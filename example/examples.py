@@ -55,8 +55,8 @@ def main():
     assert len(df) == 3
 
     # test Pillow
-    img = Image.open('test_image.png')
-    img.show()
+    img_pil = Image.fromarray(img)
+    img_pil.show()
 
     # test scikit-learn
     iris = datasets.load_iris()
