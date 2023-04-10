@@ -6,12 +6,24 @@ This image is based on
  - Torch 1.13.1
 
 Emulate ssh-ing into a remote machine. This is as opposed to using docker API, although one can still use it.
+Not focusing on production - only on development. Optimizes:
+ - user experience, no steep learning curve
+ - simplicity 
+Doesn't optimize (less attention to https://pythonspeed.com/articles/official-docker-best-practices/):
+ - image size -> no docker file tricks, just plain we copypaste
+ - security -> running as root as docker default
 
 Features:
  - GPU training with Torch
  - opengl and graphics (`glxgears` works)
  - desktop GUI via browser
  - passwordless ssh access
+
+# PIP and Conda
+
+The goal here is to be able to copypaste installation instructions from the web, but still have a reproducible research environment.
+Here is a good conda vs pip [article](https://pythonspeed.com/articles/conda-vs-pip/).
+https://pythonspeed.com/articles/activate-conda-dockerfile/
 
 # This is based on the following images/tutorials
 
