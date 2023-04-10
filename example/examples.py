@@ -37,11 +37,11 @@ def main():
     unpacked_data = msgpack_numpy.unpackb(packed_data, raw=False)
     assert np.allclose(data, unpacked_data)
 
-    print('test opencv - please close the window')
+    print('test opencv - please press a key')
     img = (np.random.rand(100,100, 3) * 255).astype(np.uint8)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     cv2.imshow('Test Image', gray)
-    cv2.waitKey(0)
+    cv2.waitKey(1000)
     cv2.destroyAllWindows()
 
     print('test pandas')
