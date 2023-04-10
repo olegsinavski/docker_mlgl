@@ -93,7 +93,7 @@ def main():
     ])
     train_dataset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     assert len(train_dataset) == 50000
-
+    print("all done.")
 
 if __name__ == '__main__':
     main()
