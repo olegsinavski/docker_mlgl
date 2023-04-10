@@ -43,7 +43,7 @@ def main():
     assert c == 32
 
     # test opencv
-    img = cv2.imread('test_image.png')
+    img = (np.random.rand(100,100, 3) * 255).astype(np.uint8)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     cv2.imshow('Test Image', gray)
     cv2.waitKey(0)
