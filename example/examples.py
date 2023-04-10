@@ -9,6 +9,7 @@ import sklearn
 import sklearn.model_selection
 import sklearn.datasets
 import sklearn.metrics
+import sklearn.svm
 import seaborn as sns
 import torch
 import torchvision
