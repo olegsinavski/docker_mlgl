@@ -15,48 +15,42 @@ def main():
     """
     Just run bunch of things to check it imports fine
     """
-    # test lz4
+    print("test lz4")
     data = b'Hello World'
     compressed_data = lz4.frame.compress(data)
     decompressed_data = lz4.frame.decompress(compressed_data)
     assert data == decompressed_data
 
-    # test matplotlib
+    print('test matplotlib - please close the window')
     x = np.linspace(0, 2*np.pi, 100)
     y = np.sin(x)
     plt.plot(x, y)
     plt.title('Sin wave')
     plt.show()
 
-    # test msgpack-numpy
+    print("test msgpack-numpy")
     data = np.random.rand(100, 100)
     packed_data = msgpack_numpy.packb(data)
     unpacked_data = msgpack_numpy.unpackb(packed_data, raw=False)
     assert np.allclose(data, unpacked_data)
 
-    # test numpy
-    a = np.array([1, 2, 3])
-    b = np.array([4, 5, 6])
-    c = np.dot(a, b)
-    assert c == 32
-
-    # test opencv
+    print('test opencv - please close the window')
     img = (np.random.rand(100,100, 3) * 255).astype(np.uint8)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     cv2.imshow('Test Image', gray)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-    # test pandas
+    print('test pandas')
     data = {'name': ['John', 'Alice', 'Bob'], 'age': [25, 30, 35]}
     df = pd.DataFrame(data)
     assert len(df) == 3
 
-    # test Pillow
+    print('test Pillow')
     img_pil = Image.fromarray(img)
     img_pil.show()
 
-    # test scikit-learn
+    print('test scikit-learn..')
     iris = sklearn.datasets.load_iris()
     X = iris.data
     y = iris.target
@@ -67,18 +61,18 @@ def main():
     acc = sklearn.metrics.accuracy_score(y_test, y_pred)
     assert acc > 0.8
 
-    # test scipy
+    print("test scipy")
     x = np.linspace(0, 2*np.pi, 100)
     y = np.sin(x)
     z = np.cos(x)
     corr = np.corrcoef(y, z)[0, 1]
     assert np.isclose(corr, 0)
 
-    # test seaborn
+    print("test seaborn")
     tips = sns.load_dataset("tips")
     sns.boxplot(x="day", y="total_bill", data=tips)
 
-    # test torch
+    print("test torch")
     x = torch.randn(10, 5)
     y = torch.randn(10, 2)
     linear = torch.nn.Linear(5, 2)
@@ -87,7 +81,7 @@ def main():
     loss = loss_func(pred, y)
     assert loss > 0
 
-    # test torchvision
+    print("test torchvision")
     transform = torchvision.transforms.Compose([
         torchvision.transforms.RandomCrop(32, padding=4),
         torchvision.transforms.RandomHorizontalFlip(),
