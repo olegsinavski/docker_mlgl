@@ -72,6 +72,11 @@ RUN python -m pip --no-cache-dir install --no-deps -r requirements.txt.lock
 # RUN CC="cc -mavx2" python -m pip install --no-deps --force-reinstall --upgrade pillow-simd==7.0.0.post3
 
 # ==================================================================
+# Add the /src/ folder to pythonpath. A sandbox will mount there the default python code
+# ------------------------------------------------------------------
+ENV PYTHONPATH "${PYTHONPATH}:/src/"
+
+# ==================================================================
 # GUI
 # ------------------------------------------------------------------
 RUN apt-get install --no-install-recommends -y libsm6 libxext6 libxrender-dev mesa-utils

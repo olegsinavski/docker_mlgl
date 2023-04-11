@@ -19,6 +19,33 @@ Features:
  - desktop GUI via browser
  - passwordless ssh access
 
+
+# New repo setup
+
+Add this repo as a submodule (or a subtree):
+```bash
+git submodule add git@github.com:olegsinavski/docker_mlgl.git docker_mlgl
+```
+
+Create a `sandbox.sh` script with this content:
+```bash
+#!/usr/bin/env bash
+set -e
+PROJECT_NAME=<NAME_OF_YOUR_PROJECT>
+
+./docker_mlgl/stop_sandbox.sh $PROJECT_NAME
+# Build parent image
+./docker_mlgl/build.sh mlgl_sandbox
+docker build -t $PROJECT_NAME .
+./docker_mlgl/start_sandbox.sh $PROJECT_NAME .
+```
+
+Create a `Dockerfile` in the root with this content:
+```bash
+FROM mlgl_sandbox
+```
+
+
 # PIP and Conda
 
 The goal here is to be able to copypaste installation instructions from the web, but still have a reproducible research environment.
