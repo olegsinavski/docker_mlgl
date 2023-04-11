@@ -1,4 +1,6 @@
 FROM nvidia/cudagl:11.4.2-devel-ubuntu20.04
+ARG VNC_PORT=8080
+ARG JUPYTER_PORT=8894
 
 ENV LANG C.UTF-8
 ENV DEBIAN_FRONTEND noninteractive
@@ -103,13 +105,14 @@ RUN set -ex; \
       libgtk2.0-dev
 
 COPY dep/vnc /vnc
-EXPOSE 8080
+EXPOSE $VNC_PORT
 
 # ==================================================================
 # jupyterlab
 # ------------------------------------------------------------------
-EXPOSE 8894
+EXPOSE $JUPYTER_PORT
 COPY scripts/jupyter_notebook_config.py /etc/jupyter/
+RUN echo "c.NotebookApp.port = $JUPYTER_PORT" > /etc/jupyter/jupyter_notebook_config.py
 
 ## ==================================================================
 ## Startup

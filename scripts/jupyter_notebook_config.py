@@ -1,6 +1,5 @@
 c = get_config()  # noqa: F821
 c.NotebookApp.ip = '0.0.0.0'
-c.NotebookApp.port = 8894
 c.NotebookApp.open_browser = False
 c.NotebookApp.password = ''
 c.NotebookApp.password_required = False
