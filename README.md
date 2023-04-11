@@ -39,11 +39,13 @@ PROJECT_NAME=<NAME_OF_YOUR_PROJECT>
 docker build -t $PROJECT_NAME .
 ./docker_mlgl/start_sandbox.sh $PROJECT_NAME .
 ```
+Allow it to be executable: `chmod +x sandbox.sh`
 
 Create a `Dockerfile` in the root with this content:
 ```bash
 FROM mlgl_sandbox
 ```
+
 
 
 # PIP and Conda
