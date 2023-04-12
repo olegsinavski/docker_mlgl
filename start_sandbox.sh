@@ -35,6 +35,15 @@ docker run  --name $docker_image_name -d -it \
   -v ~/.${docker_image_name}_home:/root \
   $docker_image_name bash >/dev/null
 
+# wait a bit and check if container is up
+sleep 1
+container_id=$(docker ps --filter "ancestor=$docker_image_name" --format "{{.ID}}")
+if [ -z "$container_id" ]; then
+    echo "Container failed to start!"
+    docker logs ${docker_image_name}
+    exit 1
+fi
+
 SANDBOX_IP="$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' $docker_image_name)"
 
 # after a rebuild, we should remove the ssh identity
