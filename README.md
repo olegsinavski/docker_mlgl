@@ -20,6 +20,17 @@ Features:
  - passwordless ssh access
 
 
+TODO add a user:
+https://stackoverflow.com/questions/25845538/how-to-use-sudo-inside-a-docker-container
+
+```bash
+RUN useradd -m -s /bin/bash docker && \
+    apt-get update && \
+    apt-get install -y sudo && \
+    echo "docker ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/docker
+```
+
+
 # New repo setup
 
 Add this repo as a submodule (or a subtree):
