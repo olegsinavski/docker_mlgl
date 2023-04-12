@@ -45,26 +45,30 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 # ==================================================================
 # python
 # ------------------------------------------------------------------
+ENV PYTHON_VERSION 3.9
 RUN $APT_INSTALL \
         software-properties-common \
         && \
     add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && \
     $APT_INSTALL \
-        python3.9 \
-        python3.9-dev \
+        python$PYTHON_VERSION \
+        python$PYTHON_VERSION-dev \
         python3-distutils-extra \
         && \
     wget -O ~/get-pip.py \
         https://bootstrap.pypa.io/get-pip.py && \
-    python3.9 ~/get-pip.py pip setuptools wheel pip-tools && \
-    ln -s /usr/bin/python3.9 /usr/local/bin/python3 && \
-    ln -s /usr/bin/python3.9 /usr/local/bin/python
+    python$PYTHON_VERSION ~/get-pip.py pip setuptools wheel pip-tools && \
+    ln -s /usr/bin/python$PYTHON_VERSION /usr/local/bin/python3 && \
+    ln -s /usr/bin/python$PYTHON_VERSION /usr/local/bin/python
+
+COPY requirements.txt.lock requirements.txt.lock
+RUN python -m pip --no-cache-dir install --no-deps -r requirements.txt.lock
 
 # Some system utils need setuptools by system python
 RUN /usr/bin/python3 ~/get-pip.py pip setuptools
-# Link 3.9 pip so that a user can install packages into system with a correct version
-RUN ln -sf /usr/local/bin/pip3.9 /usr/local/bin/pip
+# Link new pip so that a user can install packages into system with a correct version
+RUN ln -sf /usr/local/bin/pip$PYTHON_VERSION /usr/local/bin/pip
 
 # to change requirements.txt.lock, change requirements.txt, login into the container, then run
 # pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt
@@ -112,7 +116,7 @@ EXPOSE $VNC_PORT
 # ------------------------------------------------------------------
 EXPOSE $JUPYTER_PORT
 COPY scripts/jupyter_notebook_config.py /etc/jupyter/
-RUN echo "c.NotebookApp.port = $JUPYTER_PORT" > /etc/jupyter/jupyter_notebook_config.py
+RUN echo "c.NotebookApp.port = $JUPYTER_PORT" >> /etc/jupyter/jupyter_notebook_config.py
 
 ## ==================================================================
 ## Startup
