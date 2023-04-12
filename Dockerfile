@@ -2,8 +2,11 @@ FROM nvidia/cudagl:11.4.2-devel-ubuntu20.04
 ARG VNC_PORT=8080
 ARG JUPYTER_PORT=8894
 
+USER root
+
 ENV LANG C.UTF-8
 ENV DEBIAN_FRONTEND noninteractive
+ENV APT_INSTALL "apt-get install -y --no-install-recommends"
 RUN rm -rf /var/lib/apt/lists/* \
            /etc/apt/sources.list.d/cuda.list \
            /etc/apt/sources.list.d/nvidia-ml.list && \
@@ -12,8 +15,7 @@ RUN rm -rf /var/lib/apt/lists/* \
 # ==================================================================
 # tools
 # ------------------------------------------------------------------
-RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
-    $APT_INSTALL \
+RUN $APT_INSTALL \
         build-essential \
         apt-utils \
         ca-certificates \
@@ -29,23 +31,21 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
         freeglut3-dev \
         iputils-ping
 
-RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
-    $APT_INSTALL \
+RUN $APT_INSTALL \
     cmake  \
     protobuf-compiler
 
 # ==================================================================
 # SSH
 # ------------------------------------------------------------------
-RUN apt-get update && apt-get install -y openssh-server
+RUN apt-get update && $APT_INSTALL openssh-server
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 
 # ==================================================================
 # python
 # ------------------------------------------------------------------
-RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
-    $APT_INSTALL \
+RUN $APT_INSTALL \
         software-properties-common \
         && \
     add-apt-repository ppa:deadsnakes/ppa && \
@@ -81,7 +81,7 @@ ENV PYTHONPATH "${PYTHONPATH}:/src/"
 # ==================================================================
 # GUI
 # ------------------------------------------------------------------
-RUN apt-get install --no-install-recommends -y libsm6 libxext6 libxrender-dev mesa-utils
+RUN $APT_INSTALL libsm6 libxext6 libxrender-dev mesa-utils
 
 # Setup demo environment variables
 ENV LANG=en_US.UTF-8 \
@@ -93,7 +93,7 @@ ENV LANG=en_US.UTF-8 \
 
 RUN set -ex; \
     apt-get update; \
-    apt-get install -y \
+    $APT_INSTALL \
       fluxbox \
       net-tools \
       novnc \
