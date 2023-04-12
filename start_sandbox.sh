@@ -22,8 +22,11 @@ if [ -z "$pub_key_file" ]; then
   echo "No public key file found in ~/.ssh directory - ssh will not work"
 fi
 
-docker run  --name $docker_image_name -d -it \
-  --gpus all \
+#GPUS="device=4"
+GPUS="all"
+
+docker run --name $docker_image_name -d -it \
+  --gpus="\"$GPUS\",\"capabilities=compute,utility,graphics,display\"" \
   -p 8080:8080 \
   -p 5900:5900 \
   -p 8894:8894 \
