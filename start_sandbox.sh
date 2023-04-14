@@ -22,8 +22,11 @@ if [ -z "$pub_key_file" ]; then
   echo "No public key file found in ~/.ssh directory - ssh will not work"
 fi
 
-docker run  --name $docker_image_name -d -it \
-  --gpus all \
+#GPUS="device=4"
+GPUS="all"
+
+docker run --name $docker_image_name -d -it \
+  --gpus="\"$GPUS\",\"capabilities=compute,utility,graphics,display\"" \
   -p 8080:8080 \
   -p 5900:5900 \
   -p 8894:8894 \
@@ -34,6 +37,15 @@ docker run  --name $docker_image_name -d -it \
   --ipc=host \
   -v ~/.${docker_image_name}_home:/root \
   $docker_image_name bash >/dev/null
+
+# wait a bit and check if container is up
+sleep 1
+container_id=$(docker ps --filter "ancestor=$docker_image_name" --format "{{.ID}}")
+if [ -z "$container_id" ]; then
+    echo "Container failed to start!"
+    docker logs ${docker_image_name}
+    exit 1
+fi
 
 SANDBOX_IP="$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' $docker_image_name)"
 
