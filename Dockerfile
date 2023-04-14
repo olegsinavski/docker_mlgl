@@ -62,9 +62,6 @@ RUN $APT_INSTALL \
     ln -s /usr/bin/python$PYTHON_VERSION /usr/local/bin/python3 && \
     ln -s /usr/bin/python$PYTHON_VERSION /usr/local/bin/python
 
-COPY requirements.txt.lock requirements.txt.lock
-RUN python -m pip --no-cache-dir install --no-deps -r requirements.txt.lock
-
 # Some system utils need setuptools by system python
 RUN /usr/bin/python3 ~/get-pip.py pip setuptools
 # Link new pip so that a user can install packages into system with a correct version
@@ -119,19 +116,21 @@ COPY scripts/jupyter_notebook_config.py /etc/jupyter/
 RUN echo "c.NotebookApp.port = $JUPYTER_PORT" >> /etc/jupyter/jupyter_notebook_config.py
 
 ## ==================================================================
-## Startup
-## ------------------------------------------------------------------
-COPY scripts/on_docker_start.sh /on_docker_start.sh
-RUN chmod +x /on_docker_start.sh
-
-## ==================================================================
 ## config & cleanup
 ## ------------------------------------------------------------------
 RUN ldconfig && \
     apt-get clean && \
     apt-get autoremove && \
-    rm -rf /var/lib/apt/lists/* /tmp/* ~/*
+    rm -rf /var/lib/apt/lists/* /tmp/* ~/* \
 
+
+## ==================================================================
+## Startup
+## ------------------------------------------------------------------
+# Only root can launch stuff in on_docker_start.sh
+USER root
+COPY scripts/on_docker_start.sh /on_docker_start.sh
+RUN chmod +x /on_docker_start.sh
 # https://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile
 # The ENTRYPOINT specifies a command that will always be executed when the container starts.
 # The CMD specifies arguments that will be fed to the ENTRYPOINT.
