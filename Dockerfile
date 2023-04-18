@@ -29,7 +29,8 @@ RUN $APT_INSTALL \
         zlib1g-dev \
         libjpeg8-dev \
         freeglut3-dev \
-        iputils-ping
+        iputils-ping \
+        psmisc
 
 RUN $APT_INSTALL \
     cmake  \
