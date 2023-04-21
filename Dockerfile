@@ -125,10 +125,3 @@ RUN chmod +x /on_docker_start.sh
 # The CMD specifies arguments that will be fed to the ENTRYPOINT.
 ENTRYPOINT ["/on_docker_start.sh"]
 
-
-# to change requirements.txt.lock, change requirements.txt, login into the container, then run
-# pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt
-COPY requirements.txt.lock requirements.txt.lock
-RUN python -m pip --no-cache-dir install --no-deps --ignore-installed -r requirements.txt.lock
-# Add the /src/ folder to pythonpath. A sandbox will mount there the default python code
-ENV PYTHONPATH "${PYTHONPATH}:/src/"
