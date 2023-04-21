@@ -1,19 +1,13 @@
 #!/usr/bin/env bash
 set -e
+PROJECT_NAME=mlgl_sandbox
 
-# Robust way of locating script folder
-# from http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
-SOURCE=${BASH_SOURCE:-$0}
-
-DIR="$( dirname "$SOURCE" )"
-while [ -h "$SOURCE" ]
-do
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-  DIR="$( cd -P "$( dirname "$SOURCE"  )" && pwd )"
-done
-DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-
-./stop_sandbox.sh mlgl_sandbox
+# https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+./stop_sandbox.sh $PROJECT_NAME
+# Build parent image
 ./build.sh mlgl_sandbox
-./start_sandbox.sh mlgl_sandbox $DIR
+./start_sandbox.sh $PROJECT_NAME $SCRIPT_DIR
+
+SANDBOX_IP="$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' $PROJECT_NAME)"
+ssh docker@$SANDBOX_IP

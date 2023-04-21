@@ -1,6 +1,9 @@
 FROM nvidia/cudagl:11.4.2-devel-ubuntu20.04
 ARG VNC_PORT=8080
 ARG JUPYTER_PORT=8894
+ARG USER_UID=0
+ARG USER_GID=0
+ARG USER_NAME=docker
 
 USER root
 
@@ -30,18 +33,15 @@ RUN apt-get update && $APT_INSTALL \
         libjpeg8-dev \
         freeglut3-dev \
         iputils-ping \
-        psmisc
-
-RUN $APT_INSTALL \
-    cmake  \
-    protobuf-compiler
+        psmisc \
+        sudo  \
+        cmake
 
 # ==================================================================
 # SSH
 # ------------------------------------------------------------------
 RUN apt-get update && $APT_INSTALL openssh-server
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-
 
 # ==================================================================
 # python
@@ -126,12 +126,20 @@ RUN ldconfig && \
 
 
 ## ==================================================================
+## Non-root user
+## ------------------------------------------------------------------
+RUN echo ${USER_GID} ${USER_UID} ${USER_NAME}
+RUN groupadd -g ${USER_GID} ${USER_NAME} && \
+  useradd -u ${USER_UID} -g ${USER_GID} -m -s /bin/bash ${USER_NAME} && \
+  echo "${USER_NAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+## ==================================================================
 ## Startup
 ## ------------------------------------------------------------------
 # Only root can launch stuff in on_docker_start.sh
 USER root
 COPY scripts/on_docker_start.sh /on_docker_start.sh
-RUN chmod +x /on_docker_start.sh
+RUN sudo chmod +x /on_docker_start.sh
 # https://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile
 # The ENTRYPOINT specifies a command that will always be executed when the container starts.
 # The CMD specifies arguments that will be fed to the ENTRYPOINT.

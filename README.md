@@ -44,14 +44,16 @@ Create a `sandbox.sh` script with this content:
 set -e
 PROJECT_NAME=<NAME_OF_YOUR_PROJECT>
 
+# https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 ./docker_mlgl/stop_sandbox.sh $PROJECT_NAME
 # Build parent image
 ./docker_mlgl/build.sh mlgl_sandbox
-docker build -t $PROJECT_NAME .
-./docker_mlgl/start_sandbox.sh $PROJECT_NAME .
+docker build -t $PROJECT_NAME $SCRIPT_DIR
+./docker_mlgl/start_sandbox.sh $PROJECT_NAME $SCRIPT_DIR
 
 SANDBOX_IP="$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' $PROJECT_NAME)"
-ssh root@$SANDBOX_IP
+ssh docker@$SANDBOX_IP
 ```
 Allow it to be executable: `chmod +x sandbox.sh`
 
