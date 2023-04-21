@@ -29,7 +29,8 @@ RUN $APT_INSTALL \
         zlib1g-dev \
         libjpeg8-dev \
         freeglut3-dev \
-        iputils-ping
+        iputils-ping \
+        psmisc
 
 RUN $APT_INSTALL \
     cmake  \
@@ -66,18 +67,6 @@ RUN $APT_INSTALL \
 RUN /usr/bin/python3 ~/get-pip.py pip setuptools
 # Link new pip so that a user can install packages into system with a correct version
 RUN ln -sf /usr/local/bin/pip$PYTHON_VERSION /usr/local/bin/pip
-
-# to change requirements.txt.lock, change requirements.txt, login into the container, then run
-# pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt
-COPY requirements.txt.lock requirements.txt.lock
-RUN python -m pip --no-cache-dir install --no-deps -r requirements.txt.lock
-# Install simd pillow separately
-# RUN CC="cc -mavx2" python -m pip install --no-deps --force-reinstall --upgrade pillow-simd==7.0.0.post3
-
-# ==================================================================
-# Add the /src/ folder to pythonpath. A sandbox will mount there the default python code
-# ------------------------------------------------------------------
-ENV PYTHONPATH "${PYTHONPATH}:/src/"
 
 # ==================================================================
 # GUI
@@ -135,3 +124,16 @@ RUN chmod +x /on_docker_start.sh
 # The ENTRYPOINT specifies a command that will always be executed when the container starts.
 # The CMD specifies arguments that will be fed to the ENTRYPOINT.
 ENTRYPOINT ["/on_docker_start.sh"]
+
+
+# to change requirements.txt.lock, change requirements.txt, login into the container, then run
+# pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt
+COPY requirements.txt.lock requirements.txt.lock
+RUN python -m pip --no-cache-dir install --no-deps -r requirements.txt.lock
+# Install simd pillow separately
+# RUN CC="cc -mavx2" python -m pip install --no-deps --force-reinstall --upgrade pillow-simd==7.0.0.post3
+
+# ==================================================================
+# Add the /src/ folder to pythonpath. A sandbox will mount there the default python code
+# ------------------------------------------------------------------
+ENV PYTHONPATH "${PYTHONPATH}:/src/"

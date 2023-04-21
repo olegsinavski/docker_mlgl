@@ -99,5 +99,21 @@ This is an example (you can add ` --push` to push the image):
 ./build.sh -d --image-name <yourname>/cudagl --cuda-version 11.6.1 --os ubuntu --os-version 20.04 --arch x86_64 --cudagl
 ```
 
+# How to setup proxy jump ssh
+Copy your keys from your development laptop to the remote server:
+```
+scp ~/.ssh/id_ed25519 <ssh_name_of_the_server>:~/.ssh/
+scp ~/.ssh/id_ed25519.pub <ssh_name_of_the_server>:~/.ssh/
+```
+
+On your development laptop, configure a proxy jump to the sandbox:
+```
+Host sandbox
+ Hostname 172.17.0.2
+ User <youruser>
+ ProxyJump <ssh_name_of_the_server>
+ StrictHostKeyChecking no
+```
+
 
 
