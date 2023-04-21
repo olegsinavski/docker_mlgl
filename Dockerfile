@@ -97,8 +97,20 @@ RUN set -ex; \
 COPY dep/vnc /vnc
 EXPOSE $VNC_PORT
 
+## ==================================================================
+## Conda
+## ------------------------------------------------------------------
+# Install miniconda
+ENV CONDA_DIR /opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+     /bin/bash ~/miniconda.sh -b -p $CONDA_DIR
+# Put conda in path so we can use conda activate, also init the shell
+ENV PATH=$PATH:$CONDA_DIR/bin
+RUN conda install conda=23.3.1
+RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+
 # ==================================================================
-# jupyterlab
+# jupyterlab configs
 # ------------------------------------------------------------------
 EXPOSE $JUPYTER_PORT
 COPY scripts/jupyter_notebook_config.py /etc/jupyter/
