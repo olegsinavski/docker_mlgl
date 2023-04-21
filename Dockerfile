@@ -15,7 +15,7 @@ RUN rm -rf /var/lib/apt/lists/* \
 # ==================================================================
 # tools
 # ------------------------------------------------------------------
-RUN $APT_INSTALL \
+RUN apt-get update && $APT_INSTALL \
         build-essential \
         apt-utils \
         ca-certificates \
@@ -129,11 +129,6 @@ ENTRYPOINT ["/on_docker_start.sh"]
 # to change requirements.txt.lock, change requirements.txt, login into the container, then run
 # pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt
 COPY requirements.txt.lock requirements.txt.lock
-RUN python -m pip --no-cache-dir install --no-deps -r requirements.txt.lock
-# Install simd pillow separately
-# RUN CC="cc -mavx2" python -m pip install --no-deps --force-reinstall --upgrade pillow-simd==7.0.0.post3
-
-# ==================================================================
+RUN python -m pip --no-cache-dir install --no-deps --ignore-installed -r requirements.txt.lock
 # Add the /src/ folder to pythonpath. A sandbox will mount there the default python code
-# ------------------------------------------------------------------
 ENV PYTHONPATH "${PYTHONPATH}:/src/"

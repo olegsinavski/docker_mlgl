@@ -49,6 +49,9 @@ PROJECT_NAME=<NAME_OF_YOUR_PROJECT>
 ./docker_mlgl/build.sh mlgl_sandbox
 docker build -t $PROJECT_NAME .
 ./docker_mlgl/start_sandbox.sh $PROJECT_NAME .
+
+SANDBOX_IP="$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' $PROJECT_NAME)"
+ssh root@$SANDBOX_IP
 ```
 Allow it to be executable: `chmod +x sandbox.sh`
 
@@ -57,6 +60,15 @@ Create a `Dockerfile` in the root with this content:
 FROM mlgl_sandbox
 ```
 
+Run `./sandbox.sh`. It should build a docker image with your project name and then drop you into a developer sandbox.
+The sandbox is running in docker and you always can exit and then ssh into it again. 
+You can always rerun `./sandbox.sh` if you don't want to ssh. Its going to quickly rebuild it since docker caches build stages.
+
+Now choose your development environment: conda, venv or system python.
+Note, that since the container is completely isolated you don't have to use conda or venv for isolation.
+If its easy for you, just install things into the system. Here are some examples.
+
+## System python installation
 
 
 # PIP and Conda
