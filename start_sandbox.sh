@@ -37,9 +37,9 @@ docker run --name $docker_image_name -d -it \
   -p 0.0.0.0:8265:8265 \
   -p 0.0.0.0:6006:6006 \
   -e AUTHORIZED_KEYS="`cat $pub_key_file`" \
-  -v $src_folder:/src \
+  -v $src_folder:/root/$docker_image_name \
   --ipc=host \
-  -v ~/.${docker_image_name}_home:/root \
+  -v ~/.${docker_image_name}_storage:/root/storage \
   $docker_image_name bash >/dev/null
 
 # wait a bit and check if container is up

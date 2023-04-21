@@ -73,7 +73,14 @@ If its easy for you, just install things into the system. Here are some examples
 
 ## Run apt-gets or other system install scripts
 
-## System python installation
+If you have some apt-get installs or a system script, simply call it from the dockerfile.
+Parent dockerfile defines `APT_INSTALL` variable to install packages without manual interface.
+For example, if you need to install `libsfml-dev`, run:
+```dockerfile
+RUN apt-get update && $APT_INSTALL libsfml-dev
+```
+
+## System python installation with `requirements.txt`
 
 The easiest and at the same time robust way to install requirements is to do with requirement locking.
 Read [here](https://pythonspeed.com/articles/conda-dependency-management/) about the similar technique in `conda`. 
@@ -90,6 +97,23 @@ RUN python -m pip --no-cache-dir install --no-deps --ignore-installed -r require
 ENV PYTHONPATH "${PYTHONPATH}:/src/"
 ```
 
+## Run `conda`
+
+If you have `environment.yml` file in your repo, add the following to docker:
+```dockerfile
+COPY environment.yml /root/environment.yml
+RUN conda env create -f ~/environment.yml
+# activate conda env on login
+RUN echo "conda activate <YOUR_ENV_NAME>" >> ~/.bashrc
+```
+
+Notice that it does NOT activate conda environment during *build*, but only during ssh-ing into the sandbox.
+If you want to run `conda` commands inside the env*during build*, use the following recipe from (here)[https://pythonspeed.com/articles/activate-conda-dockerfile/]:
+```dockerfile
+SHELL ["conda", "run", "-n", "<YOUR_ENV_NAME>", "/bin/bash", "-c"]
+# this will run inside <YOUR_ENV_NAME> conda env
+RUN python setup.py. develop 
+```
 
 # PIP and Conda
 
