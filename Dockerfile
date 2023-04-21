@@ -110,7 +110,7 @@ RUN echo "c.NotebookApp.port = $JUPYTER_PORT" >> /etc/jupyter/jupyter_notebook_c
 RUN ldconfig && \
     apt-get clean && \
     apt-get autoremove && \
-    rm -rf /var/lib/apt/lists/* /tmp/* ~/* \
+    rm -rf /var/lib/apt/lists/* /tmp/* ~/*
 
 
 ## ==================================================================
