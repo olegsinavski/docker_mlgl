@@ -137,8 +137,8 @@ Make docker daemon available on a fixed port:
 # run MNIST training and some random examples
 
 ```bash
-python /example/mnist.py
-python /example/examples.py
+python example/mnist.py
+python example/examples.py
 ```
 
 # How VNC works
