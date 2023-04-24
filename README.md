@@ -65,6 +65,8 @@ FROM mlgl_sandbox
 Run `./sandbox.sh`. It should build a docker image with your project name and then drop you into a developer sandbox.
 The sandbox is running in docker and you always can exit and then ssh into it again. 
 You can always rerun `./sandbox.sh` if you don't want to ssh. Its going to quickly rebuild it since docker caches build stages.
+There is a default `docker` user created during build and a `root` user. 
+We recommend using `docker` for all user installations, such as venvs and conda.  
 
 Your repo is available under `/src` director in the sandbox. 
 Additionally, your home folder in the container is mapped to `~/.${project_name}_home` folder on your desktop.
@@ -103,7 +105,8 @@ ENV PYTHONPATH "${PYTHONPATH}:/src/"
 
 If you have `environment.yml` file in your repo, add the following to docker:
 ```dockerfile
-COPY environment.yml /root/environment.yml
+USER docker
+COPY environment.yml /home/docker/environment.yml
 RUN conda env create -f ~/environment.yml
 # activate conda env on login
 RUN echo "conda activate <YOUR_ENV_NAME>" >> ~/.bashrc
