@@ -33,10 +33,11 @@ RUN useradd -m -s /bin/bash docker && \
 
 # New repo setup
 
-Add this repo as a submodule (or a subtree):
+Add this repo as a subtree:
 ```bash
-git submodule add git@github.com:olegsinavski/docker_mlgl.git docker_mlgl
+git subtree add --prefix docker_mlgl git@github.com:olegsinavski/docker_mlgl.git main --squash
 ```
+(or submodule - not recommended `git submodule add git@github.com:olegsinavski/docker_mlgl.git docker_mlgl`)
 
 Create a `sandbox.sh` script with this content:
 ```bash
@@ -63,10 +64,9 @@ FROM mlgl_sandbox
 ```
 
 Run `./sandbox.sh`. It should build a docker image with your project name and then drop you into a developer sandbox.
-The sandbox is running in docker and you always can exit and then ssh into it again. 
+
+The sandbox is running in docker and you always can exit and then ssh into it again.
 You can always rerun `./sandbox.sh` if you don't want to ssh. Its going to quickly rebuild it since docker caches build stages.
-There is a default `docker` user created during build and a `root` user. 
-We recommend using `docker` for all user installations, such as venvs and conda.  
 
 Your repo is available under `/src` director in the sandbox. 
 Additionally, your home folder in the container is mapped to `~/.${project_name}_home` folder on your desktop.
@@ -120,11 +120,6 @@ SHELL ["conda", "run", "-n", "<YOUR_ENV_NAME>", "/bin/bash", "-c"]
 RUN python setup.py. develop 
 ```
 
-# PIP and Conda
-
-The goal here is to be able to copypaste installation instructions from the web, but still have a reproducible research environment.
-Here is a good conda vs pip [article](https://pythonspeed.com/articles/conda-vs-pip/).
-https://pythonspeed.com/articles/activate-conda-dockerfile/
 
 # This is based on the following images/tutorials
 
@@ -138,7 +133,7 @@ Make docker daemon available on a fixed port:
 `https://dockerlabs.collabnix.com/beginners/components/daemon/access-daemon-externally.html`
 
 # run MNIST training and some random examples
-
+TODO: add requirements example
 ```bash
 python example/mnist.py
 python example/examples.py
@@ -176,5 +171,20 @@ Host sandbox
  StrictHostKeyChecking no
 ```
 
+Notice `172.17.0.2` as explicit address, but your docker container address could be different.
+To get your IP address, you can run `docker inspect -f '{{ .NetworkSettings.IPAddress }}' <PROJECT_NAME>`
+
+# Users
+
+There is a default `docker` user created during build and a `root` user. 
+We recommend using `docker` for all user installations, such as venvs and conda.
+There is a paswordless `sudo` for the `docker` user in case you need it.
+
+# Troubleshooting
+```
+invalid argument <XXX> for "-t, --tag" flag: invalid reference format: repository name must be lowercase
+```
+
+Docker wants full lowercase name for the image. Use lowercase in `sandbox.sh`, `PROJECT_NAME` variable.
 
 
