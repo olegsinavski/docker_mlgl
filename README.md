@@ -44,11 +44,16 @@ Create a `sandbox.sh` script with this content:
 set -e
 PROJECT_NAME=<NAME_OF_YOUR_PROJECT>
 
+# https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 ./docker_mlgl/stop_sandbox.sh $PROJECT_NAME
 # Build parent image
 ./docker_mlgl/build.sh mlgl_sandbox
-docker build -t $PROJECT_NAME .
-./docker_mlgl/start_sandbox.sh $PROJECT_NAME .
+docker build -t $PROJECT_NAME $SCRIPT_DIR
+./docker_mlgl/start_sandbox.sh $PROJECT_NAME $SCRIPT_DIR
+
+SANDBOX_IP="$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' $PROJECT_NAME)"
+ssh docker@$SANDBOX_IP
 ```
 Allow it to be executable: `chmod +x sandbox.sh`
 
@@ -57,7 +62,63 @@ Create a `Dockerfile` in the root with this content:
 FROM mlgl_sandbox
 ```
 
+Run `./sandbox.sh`. It should build a docker image with your project name and then drop you into a developer sandbox.
+The sandbox is running in docker and you always can exit and then ssh into it again. 
+You can always rerun `./sandbox.sh` if you don't want to ssh. Its going to quickly rebuild it since docker caches build stages.
+There is a default `docker` user created during build and a `root` user. 
+We recommend using `docker` for all user installations, such as venvs and conda.  
 
+Your repo is available under `/src` director in the sandbox. 
+Additionally, your home folder in the container is mapped to `~/.${project_name}_home` folder on your desktop.
+
+Now choose your development environment: conda, venv or system python.
+Note, that since the container is completely isolated you don't have to use conda or venv for isolation.
+If its easy for you, just install things into the system. Here are some examples.
+
+## Run apt-gets or other system install scripts
+
+If you have some apt-get installs or a system script, simply call it from the dockerfile.
+Parent dockerfile defines `APT_INSTALL` variable to install packages without manual interface.
+For example, if you need to install `libsfml-dev`, run:
+```dockerfile
+RUN apt-get update && $APT_INSTALL libsfml-dev
+```
+
+## System python installation with `requirements.txt`
+
+The easiest and at the same time robust way to install requirements is to do with requirement locking.
+Read [here](https://pythonspeed.com/articles/conda-dependency-management/) about the similar technique in `conda`. 
+
+ - Create `requirements.txt` (you can copy one from this repo - it has a nice torch and torchvision versions with appropriate cuda version).
+ - ssh into the container (e.g. by running `./sandbox.sh`), cd into `/src` folder, you should find `requirements.txt` there
+ - Run `pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt`
+ - You should be able to find `requirements.txt.lock` file on your host repo now. Commit both files.
+ - Add the following in your `Dockerfile`
+```dockerfile
+COPY requirements.txt.lock requirements.txt.lock
+RUN python -m pip --no-cache-dir install --no-deps --ignore-installed -r requirements.txt.lock
+# Add the /src/ folder to pythonpath. A sandbox will mount there the default python code
+ENV PYTHONPATH "${PYTHONPATH}:/src/"
+```
+
+## Run `conda`
+
+If you have `environment.yml` file in your repo, add the following to docker:
+```dockerfile
+USER docker
+COPY environment.yml /home/docker/environment.yml
+RUN conda env create -f ~/environment.yml
+# activate conda env on login
+RUN echo "conda activate <YOUR_ENV_NAME>" >> ~/.bashrc
+```
+
+Notice that it does NOT activate conda environment during *build*, but only during ssh-ing into the sandbox.
+If you want to run `conda` commands inside the env*during build*, use the following recipe from (here)[https://pythonspeed.com/articles/activate-conda-dockerfile/]:
+```dockerfile
+SHELL ["conda", "run", "-n", "<YOUR_ENV_NAME>", "/bin/bash", "-c"]
+# this will run inside <YOUR_ENV_NAME> conda env
+RUN python setup.py. develop 
+```
 
 # PIP and Conda
 
@@ -79,8 +140,8 @@ Make docker daemon available on a fixed port:
 # run MNIST training and some random examples
 
 ```bash
-python /example/mnist.py
-python /example/examples.py
+python example/mnist.py
+python example/examples.py
 ```
 
 # How VNC works

@@ -1,6 +1,9 @@
 FROM nvidia/cudagl:11.4.2-devel-ubuntu20.04
 ARG VNC_PORT=8080
 ARG JUPYTER_PORT=8894
+ARG USER_UID=0
+ARG USER_GID=0
+ARG USER_NAME=docker
 
 USER root
 
@@ -15,7 +18,7 @@ RUN rm -rf /var/lib/apt/lists/* \
 # ==================================================================
 # tools
 # ------------------------------------------------------------------
-RUN $APT_INSTALL \
+RUN apt-get update && $APT_INSTALL \
         build-essential \
         apt-utils \
         ca-certificates \
@@ -30,18 +33,15 @@ RUN $APT_INSTALL \
         libjpeg8-dev \
         freeglut3-dev \
         iputils-ping \
-        psmisc
-
-RUN $APT_INSTALL \
-    cmake  \
-    protobuf-compiler
+        psmisc \
+        sudo  \
+        cmake
 
 # ==================================================================
 # SSH
 # ------------------------------------------------------------------
 RUN apt-get update && $APT_INSTALL openssh-server
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-
 
 # ==================================================================
 # python
@@ -97,8 +97,20 @@ RUN set -ex; \
 COPY dep/vnc /vnc
 EXPOSE $VNC_PORT
 
+## ==================================================================
+## Conda
+## ------------------------------------------------------------------
+# Install miniconda
+ENV CONDA_DIR /opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+     /bin/bash ~/miniconda.sh -b -p $CONDA_DIR
+# Put conda in path so we can use conda activate, also init the shell
+ENV PATH=$PATH:$CONDA_DIR/bin
+RUN conda install conda=23.3.1
+RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+
 # ==================================================================
-# jupyterlab
+# jupyterlab configs
 # ------------------------------------------------------------------
 EXPOSE $JUPYTER_PORT
 COPY scripts/jupyter_notebook_config.py /etc/jupyter/
@@ -110,8 +122,16 @@ RUN echo "c.NotebookApp.port = $JUPYTER_PORT" >> /etc/jupyter/jupyter_notebook_c
 RUN ldconfig && \
     apt-get clean && \
     apt-get autoremove && \
-    rm -rf /var/lib/apt/lists/* /tmp/* ~/* \
+    rm -rf /var/lib/apt/lists/* /tmp/* ~/*
 
+
+## ==================================================================
+## Non-root user
+## ------------------------------------------------------------------
+RUN echo ${USER_GID} ${USER_UID} ${USER_NAME}
+RUN groupadd -g ${USER_GID} ${USER_NAME} && \
+  useradd -u ${USER_UID} -g ${USER_GID} -m -s /bin/bash ${USER_NAME} && \
+  echo "${USER_NAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 ## ==================================================================
 ## Startup
@@ -119,21 +139,9 @@ RUN ldconfig && \
 # Only root can launch stuff in on_docker_start.sh
 USER root
 COPY scripts/on_docker_start.sh /on_docker_start.sh
-RUN chmod +x /on_docker_start.sh
+RUN sudo chmod +x /on_docker_start.sh
 # https://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile
 # The ENTRYPOINT specifies a command that will always be executed when the container starts.
 # The CMD specifies arguments that will be fed to the ENTRYPOINT.
 ENTRYPOINT ["/on_docker_start.sh"]
 
-
-# to change requirements.txt.lock, change requirements.txt, login into the container, then run
-# pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt
-COPY requirements.txt.lock requirements.txt.lock
-RUN python -m pip --no-cache-dir install --no-deps -r requirements.txt.lock
-# Install simd pillow separately
-# RUN CC="cc -mavx2" python -m pip install --no-deps --force-reinstall --upgrade pillow-simd==7.0.0.post3
-
-# ==================================================================
-# Add the /src/ folder to pythonpath. A sandbox will mount there the default python code
-# ------------------------------------------------------------------
-ENV PYTHONPATH "${PYTHONPATH}:/src/"

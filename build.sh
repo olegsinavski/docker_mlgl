@@ -20,4 +20,4 @@ do
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-docker build -t $docker_image_name $DIR
+docker build --build-arg USER_UID=$(id -u) --build-arg USER_GID=$(id -g) --build-arg USER_NAME=docker -t $docker_image_name $DIR

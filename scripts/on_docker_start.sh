@@ -34,6 +34,7 @@ function setup_passwordless_ssh() {
 }
 
 setup_passwordless_ssh "root" "${AUTHORIZED_KEYS}"
+setup_passwordless_ssh "docker" "${AUTHORIZED_KEYS}"
 
 # Launch VNC
 exec supervisord -c /vnc/supervisord.conf &
