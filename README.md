@@ -29,9 +29,14 @@ RUN useradd -m -s /bin/bash docker && \
     apt-get install -y sudo && \
     echo "docker ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/docker
 ```
-
-
 # New repo setup
+
+You probably already have some repo that you want to dockerize.
+First decision point to pick:
+(1) Add Dockerize right into your repo (easiest)
+(2) Make a highlevel repo, into which you put your existing repo as a submodule or subtree (a bit cleaner, but with some hassle)
+Option (1) is suboptimal if you have `setup.py` in the root of your repo AND you want to install it into venv inside docker AND
+you want to edit files.
 
 Add this repo as a subtree:
 ```bash
@@ -43,13 +48,14 @@ Create a `sandbox.sh` script with this content:
 ```bash
 #!/usr/bin/env bash
 set -e
-PROJECT_NAME=<NAME_OF_YOUR_PROJECT>
+PROJECT_NAME=smarts
+PYTHON_VERSION=3.9
 
 # https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 ./docker_mlgl/stop_sandbox.sh $PROJECT_NAME
 # Build parent image
-./docker_mlgl/build.sh mlgl_sandbox
+./docker_mlgl/build.sh mlgl_sandbox $PYTHON_VERSION
 docker build -t $PROJECT_NAME $SCRIPT_DIR
 ./docker_mlgl/start_sandbox.sh $PROJECT_NAME $SCRIPT_DIR
 
@@ -72,8 +78,8 @@ Your repo is available under `/src` director in the sandbox.
 Additionally, your home folder in the container is mapped to `~/.${project_name}_home` folder on your desktop.
 
 Now choose your development environment: conda, venv or system python.
-Note, that since the container is completely isolated you don't have to use conda or venv for isolation.
-If its easy for you, just install things into the system. Here are some examples.
+Note, that since the container is completely isolated you don't *have to* use conda or venv for isolation.
+If it's easy for you, just install things into the system. Here are some examples.
 
 ## Run apt-gets or other system install scripts
 
@@ -82,6 +88,12 @@ Parent dockerfile defines `APT_INSTALL` variable to install packages without man
 For example, if you need to install `libsfml-dev`, run:
 ```dockerfile
 RUN apt-get update && $APT_INSTALL libsfml-dev
+```
+If you have a some `setup.sh` script, add:
+```dockerfile
+COPY <path_to_setup_sh>/setup.sh /root/setup.sh
+RUN chmod +x /root/setup.sh
+RUN /root/setup.sh
 ```
 
 ## System python installation with `requirements.txt`
@@ -101,7 +113,9 @@ RUN python -m pip --no-cache-dir install --no-deps --ignore-installed -r require
 ENV PYTHONPATH "${PYTHONPATH}:/src/"
 ```
 
-## Run `conda`
+Also notice, that you can change system python version with `PYTHON_VERSION` variable in `sandbox.sh` (tested with 3.8 and 3.9 so far).
+
+## Use `conda`
 
 If you have `environment.yml` file in your repo, add the following to docker:
 ```dockerfile
@@ -118,6 +132,19 @@ If you want to run `conda` commands inside the env*during build*, use the follow
 SHELL ["conda", "run", "-n", "<YOUR_ENV_NAME>", "/bin/bash", "-c"]
 # this will run inside <YOUR_ENV_NAME> conda env
 RUN python setup.py. develop 
+```
+
+# Use `venv`
+
+Based on (this)[https://pythonspeed.com/articles/activate-virtualenv-dockerfile/]
+```dockerfile
+# use non-root user and switch to the repo
+USER docker
+WORKDIR /home/docker/<PROJECT_NAME>
+
+ENV VIRTUAL_ENV=/home/docker/<PROJECT_NAME>/venv
+RUN python3.8 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ```
 
 
