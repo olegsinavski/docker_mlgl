@@ -48,7 +48,7 @@ Create a `sandbox.sh` script with this content:
 ```bash
 #!/usr/bin/env bash
 set -e
-PROJECT_NAME=smarts
+PROJECT_NAME=<YOUR_REPO_NAME>
 PYTHON_VERSION=3.9
 
 # https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
@@ -74,8 +74,9 @@ Run `./sandbox.sh`. It should build a docker image with your project name and th
 The sandbox is running in docker and you always can exit and then ssh into it again.
 You can always rerun `./sandbox.sh` if you don't want to ssh. Its going to quickly rebuild it since docker caches build stages.
 
-Your repo is available under `/src` director in the sandbox. 
-Additionally, your home folder in the container is mapped to `~/.${project_name}_home` folder on your desktop.
+Your repo is available under `~/` directory in the sandbox. 
+Additionally, a storage folder `~/storage` in the container is mapped to `~/.${project_name}_storage` folder on your desktop.
+Use it for artifacts that you want to persist between rebuilds (e.g. network weights).
 
 Now choose your development environment: conda, venv or system python.
 Note, that since the container is completely isolated you don't *have to* use conda or venv for isolation.
@@ -138,13 +139,16 @@ RUN python setup.py. develop
 
 Based on (this)[https://pythonspeed.com/articles/activate-virtualenv-dockerfile/]
 ```dockerfile
-# use non-root user and switch to the repo
 USER docker
-WORKDIR /home/docker/<PROJECT_NAME>
-
-ENV VIRTUAL_ENV=/home/docker/<PROJECT_NAME>/venv
+WORKDIR /home/docker/
+ENV VIRTUAL_ENV=/home/docker/venv
 RUN python3.8 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN echo "source venv/bin/activate" >> ~/.bashrc
+
+COPY --chown=docker:docker ./folder_to_install /home/docker/folder_to_install
+WORKDIR /home/docker/folder_to_install
+RUN pip install -e .
 ```
 
 
