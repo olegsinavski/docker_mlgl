@@ -4,6 +4,7 @@ ARG JUPYTER_PORT=8894
 ARG USER_UID=0
 ARG USER_GID=0
 ARG USER_NAME=docker
+ARG PYTHON_VERSION=3.8
 
 USER root
 
@@ -46,7 +47,6 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 # ==================================================================
 # python
 # ------------------------------------------------------------------
-ENV PYTHON_VERSION 3.9
 RUN $APT_INSTALL \
         software-properties-common \
         && \
@@ -56,6 +56,7 @@ RUN $APT_INSTALL \
         python$PYTHON_VERSION \
         python$PYTHON_VERSION-dev \
         python3-distutils-extra \
+        python$PYTHON_VERSION-venv  \
         && \
     wget -O ~/get-pip.py \
         https://bootstrap.pypa.io/get-pip.py && \
@@ -139,7 +140,7 @@ RUN groupadd -g ${USER_GID} ${USER_NAME} && \
 # Only root can launch stuff in on_docker_start.sh
 USER root
 COPY scripts/on_docker_start.sh /on_docker_start.sh
-RUN sudo chmod +x /on_docker_start.sh
+RUN chmod +x /on_docker_start.sh
 # https://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile
 # The ENTRYPOINT specifies a command that will always be executed when the container starts.
 # The CMD specifies arguments that will be fed to the ENTRYPOINT.
