@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+if [ "$(whoami)" != "root" ]; then
+    echo "Docker startup script must be run as a root user. Add 'USER root' line at the end of your Dockerfile"
+    exit 1
+fi
+
 service ssh start >/dev/null 2>&1
 
 function setup_passwordless_ssh() {
