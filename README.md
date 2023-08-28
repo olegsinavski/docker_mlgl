@@ -96,7 +96,7 @@ Read [here](https://pythonspeed.com/articles/conda-dependency-management/) about
 
  - Create `requirements.txt` (you can copy one from this repo `example/requirements.txt` - it has a nice torch and torchvision versions with appropriate cuda version).
  - ssh into the container (e.g. by running `./sandbox.sh`), cd into `~/<YOUR_REPO_NAME>` folder, you should find `requirements.txt` there
- - Run `pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt`
+ - Run `pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt`. NOTE: you'll need at least 16GB RAM for this!
  - You should be able to find `requirements.txt.lock` file on your host repo now. Commit both files.
  - Add the following in your `Dockerfile`
 ```dockerfile
