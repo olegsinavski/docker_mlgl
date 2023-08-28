@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if command -v docker &> /dev/null
+then
+  echo "Docker already installed, exiting..."
+  exit
+fi
+
 sudo apt update
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg

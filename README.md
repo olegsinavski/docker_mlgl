@@ -302,7 +302,7 @@ git config --global user.name "Your Name"
 Add a `~/.ssh/gce_key` to your GitHub account.
 Copy the keys from your laptop to the dev VM:
 `scp ~/.ssh/gce_key* gce:~/.ssh/`
-On the VM, run:
+Add the following at the end of `~/.bashrc`
 ```bash
 eval $(ssh-agent)
 ssh-add ~/.ssh/gce_key
