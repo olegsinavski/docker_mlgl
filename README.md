@@ -3,8 +3,7 @@
 This image is based on 
  - Ubuntu 20.04
  - CUDA 11.4
- - Torch 1.13.1
-
+ 
 Emulate ssh-ing into a remote machine. This is as opposed to using docker API, although one can still use it.
 Not focusing on production - only on development. Optimizes:
  - user experience, no steep learning curve
@@ -14,10 +13,10 @@ Doesn't optimize (less attention to https://pythonspeed.com/articles/official-do
  - security -> running as root as docker default
 
 Features:
- - GPU training with Torch
  - opengl and graphics (`glxgears` works)
  - desktop GUI via browser
  - passwordless ssh access
+ - GPU training (e.g. with Torch)
  
 # New repo setup
 
@@ -70,7 +69,8 @@ Your repo is available under `~/` directory in the sandbox.
 Additionally, a storage folder `~/storage` in the container is mapped to `~/.${project_name}_storage` folder on your desktop.
 Use it for artifacts that you want to persist between rebuilds (e.g. network weights).
 
-Now choose your development environment: conda, venv or system python.
+*Currently, your sandbox is not very useful. You need to add your custom setup into the `Dockerfile`:*
+First, run some `apt-gets` if needed and then choose your development environment: conda, venv or system python (see below).
 Note, that since the container is completely isolated you don't *have to* use conda or venv for isolation.
 If it's easy for you, just install things into the system. Here are some examples.
 
@@ -94,8 +94,8 @@ RUN /root/setup.sh
 The easiest and at the same time robust way to install requirements is to do with requirement locking.
 Read [here](https://pythonspeed.com/articles/conda-dependency-management/) about the similar technique in `conda`. 
 
- - Create `requirements.txt` (you can copy one from this repo - it has a nice torch and torchvision versions with appropriate cuda version).
- - ssh into the container (e.g. by running `./sandbox.sh`), cd into `/src` folder, you should find `requirements.txt` there
+ - Create `requirements.txt` (you can copy one from this repo `example/requirements.txt` - it has a nice torch and torchvision versions with appropriate cuda version).
+ - ssh into the container (e.g. by running `./sandbox.sh`), cd into `~/<YOUR_REPO_NAME>` folder, you should find `requirements.txt` there
  - Run `pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt`
  - You should be able to find `requirements.txt.lock` file on your host repo now. Commit both files.
  - Add the following in your `Dockerfile`
@@ -103,7 +103,7 @@ Read [here](https://pythonspeed.com/articles/conda-dependency-management/) about
 COPY requirements.txt.lock requirements.txt.lock
 RUN python -m pip --no-cache-dir install --no-deps --ignore-installed -r requirements.txt.lock
 # Add the /src/ folder to pythonpath. A sandbox will mount there the default python code
-ENV PYTHONPATH "${PYTHONPATH}:/src/"
+ENV PYTHONPATH "${PYTHONPATH}:~/<YOUR_REPO_NAME>"
 ```
 
 Also notice, that you can change system python version with `PYTHON_VERSION` variable in `sandbox.sh` (tested with 3.8 and 3.9 so far).
@@ -230,10 +230,12 @@ cat ~/.ssh/gce_key.pub
 Go to [Google Compute Engine (GCE)](https://console.cloud.google.com/compute), turn on GCE API.
 You should see creating
 Create a VM with the following options:
- - default region is the cheapest, E2 is a good cheapest option
+ - default region is the cheapest
+ - E2 is a good cheapest option, but you need at least 16GB of RAM if you'll use `pip`
  - "Availability policies", choose "Spot" to save money
  - Check "Enable display service"
  - Boot disk, "Change", Choose Ubuntu 20.04
+ - Boot disk, "Change", make it at least 20Gb (10 is not enough)
  - Firewall, check "Allow HTTP/HTTPS traffic"
  - Advanced options, Disks, Add new disk, pick "Standard" (cheapest)
  - Advanced options, Security, Manage Access, Add manually generated SSH keys, add the content of `~/.ssh/gce_key.pub`
