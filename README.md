@@ -10,7 +10,7 @@ Not focusing on production - only on development. Optimizes:
  - user experience, no steep learning curve
  - simplicity 
 Doesn't optimize (less attention to https://pythonspeed.com/articles/official-docker-best-practices/):
- - image size -> no docker file tricks, just plain we copypaste
+ - image size -> no docker file tricks, just plain copypaste
  - security -> running as root as docker default
 
 Features:
@@ -33,7 +33,7 @@ RUN useradd -m -s /bin/bash docker && \
 
 You probably already have some repo that you want to dockerize.
 First decision point to pick:
-(1) Add Dockerize right into your repo (easiest)
+(1) Add Dockerfile right into your repo (easiest)
 (2) Make a highlevel repo, into which you put your existing repo as a submodule or subtree (a bit cleaner, but with some hassle)
 Option (1) is suboptimal if you have `setup.py` in the root of your repo AND you want to install it into venv inside docker AND
 you want to edit files.
@@ -68,6 +68,8 @@ Create a `Dockerfile` in the root with this content:
 ```bash
 FROM mlgl_sandbox
 ```
+
+Install docker if needed `./install_docker.sh`
 
 Run `./sandbox.sh`. It should build a docker image with your project name and then drop you into a developer sandbox.
 
@@ -219,3 +221,90 @@ invalid argument <XXX> for "-t, --tag" flag: invalid reference format: repositor
 Docker wants full lowercase name for the image. Use lowercase in `sandbox.sh`, `PROJECT_NAME` variable.
 
 
+# Google Cloud setup
+
+## Make ssh key for your dev instances
+https://cloud.google.com/compute/docs/connect/create-ssh-keys
+The `USERNAME` below is your 
+```bash
+ssh-keygen -t rsa -f ~/.ssh/gce_key -C <USERNAME> -b 2048
+```
+To see the generated public key that you're going to add to GCE:
+```bash
+cat ~/.ssh/gce_key.pub 
+```
+(optional) Add this ssh key [globally](https://cloud.google.com/compute/docs/connect/add-ssh-keys)
+
+## Create the cheapest test CPU VM to practice from scratch
+
+Go to [Google Compute Engine (GCE)](https://console.cloud.google.com/compute), turn on GCE API.
+You should see creating
+Create a VM with the following options:
+ - default region is the cheapest, E2 is a good cheapest option
+ - "Availability policies", choose "Spot" to save money
+ - Check "Enable display service"
+ - Boot disk, "Change", Choose Ubuntu 20.04
+ - Firewall, check "Allow HTTP/HTTPS traffic"
+ - Advanced options, Disks, Add new disk, pick "Standard" (cheapest)
+ - Advanced options, Security, Manage Access, Add manually generated SSH keys, add the content of `~/.ssh/gce_key.pub`
+
+Now create the instance, you should see a green checkmark in "Status" column.
+
+Add this to your `~/.ssh/config`. Your `USERNAME` is what's before your `@gmail.com`.
+`EXTERNAL_IP` is what you see in "External IP" column of your running instance
+```shell
+Host gce
+  HostName <EXTERNAL_IP>
+  User <USERNAME>
+  IdentityFile ~/.ssh/gce_key
+```
+
+You should be able to login `ssh gce` from your laptop.
+Call `sudo passwd` to change the password.
+
+### Format your empty disk
+Follow (this tutorial)[https://cloud.google.com/compute/docs/disks/format-mount-disk-linux].
+In short:
+```
+sudo lsblk
+# you should see your large disk size under sdb. Now create the filesystem
+sudo mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
+# mount the disk
+sudo mkdir -p /mnt/disks/disk-1
+sudo mount -o discard,defaults /dev/sdb /mnt/disks/disk-1
+# mount on boot
+sudo blkid /dev/sdb
+sudo vim /etc/fstab , Shift+G, o
+# add this:
+UUID="<UUID_FROM_ABOVE>" /mnt/disks/disk-1 ext4 discard,defaults 0 2
+```
+
+## Move home folder onto the large drive:
+```
+cd /mnt/disks/disk-1
+mkdir -p home/<USERNAME> 
+sudo rsync -avz --progress /home/<USERNAME>/ /mnt/disks/disk-1/home/<USERNAME>/
+sudo vim /etc/passwd
+# find your username entry and change /home/<USERNAME> to /mnt/disks/disk-1/home/<USERNAME>
+sudo chown -R <USERNAME> <USERNAME> /mnt/disks/disk-1/home/<USERNAME> 
+sudo reboot
+```
+Now when you ssh again into `~` and call `pwd` you should see `/mnt/disks/disk-1/home/<USERNAME> `
+
+
+## Setup github keys
+
+```bash
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
+```
+
+Add a `~/.ssh/gce_key` to your GitHub account.
+Copy the keys from your laptop to the dev VM:
+`scp ~/.ssh/gce_key* gce:~/.ssh/`
+On the VM, run:
+```bash
+eval $(ssh-agent)
+ssh-add ~/.ssh/gce_key
+```
+Now you should be able to clone your repo.
