@@ -25,12 +25,18 @@ fi
 #GPUS="device=4"
 GPUS="all"
 
+if lspci | grep -q NVIDIA; then
+  GPU_FLAG="--gpus=\"$GPUS\",\"capabilities=compute,utility,graphics,display\""
+else
+  GPU_FLAG=""
+  echo "No GPUs detected"
+fi
+
 # --ipc=host is needed for X display
 # if you can't connect to VNC, check put X11 log at /var/log/x11vnc.log
 # but sometimes you run ouf of shmem and should use wget https://dhampir.no/stuff/bash/shm_wipe
-
 docker run --name $docker_image_name -d -it \
-  --gpus="\"$GPUS\",\"capabilities=compute,utility,graphics,display\"" \
+  $GPU_FLAG \
   -p 8080:8080 \
   -p 5900:5900 \
   -p 8894:8894 \

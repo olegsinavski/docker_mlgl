@@ -3,37 +3,26 @@
 This image is based on 
  - Ubuntu 20.04
  - CUDA 11.4
- - Torch 1.13.1
-
+ 
 Emulate ssh-ing into a remote machine. This is as opposed to using docker API, although one can still use it.
 Not focusing on production - only on development. Optimizes:
  - user experience, no steep learning curve
  - simplicity 
 Doesn't optimize (less attention to https://pythonspeed.com/articles/official-docker-best-practices/):
- - image size -> no docker file tricks, just plain we copypaste
+ - image size -> no docker file tricks, just plain copypaste
  - security -> running as root as docker default
 
 Features:
- - GPU training with Torch
  - opengl and graphics (`glxgears` works)
  - desktop GUI via browser
  - passwordless ssh access
-
-
-TODO add a user:
-https://stackoverflow.com/questions/25845538/how-to-use-sudo-inside-a-docker-container
-
-```bash
-RUN useradd -m -s /bin/bash docker && \
-    apt-get update && \
-    apt-get install -y sudo && \
-    echo "docker ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/docker
-```
+ - GPU training (e.g. with Torch)
+ 
 # New repo setup
 
 You probably already have some repo that you want to dockerize.
 First decision point to pick:
-(1) Add Dockerize right into your repo (easiest)
+(1) Add Dockerfile right into your repo (easiest)
 (2) Make a highlevel repo, into which you put your existing repo as a submodule or subtree (a bit cleaner, but with some hassle)
 Option (1) is suboptimal if you have `setup.py` in the root of your repo AND you want to install it into venv inside docker AND
 you want to edit files.
@@ -69,6 +58,8 @@ Create a `Dockerfile` in the root with this content:
 FROM mlgl_sandbox
 ```
 
+Install docker if needed `./install_docker.sh`
+
 Run `./sandbox.sh`. It should build a docker image with your project name and then drop you into a developer sandbox.
 
 The sandbox is running in docker and you always can exit and then ssh into it again.
@@ -78,7 +69,8 @@ Your repo is available under `~/` directory in the sandbox.
 Additionally, a storage folder `~/storage` in the container is mapped to `~/.${project_name}_storage` folder on your desktop.
 Use it for artifacts that you want to persist between rebuilds (e.g. network weights).
 
-Now choose your development environment: conda, venv or system python.
+*Currently, your sandbox is not very useful. You need to add your custom setup into the `Dockerfile`:*
+First, run some `apt-gets` if needed and then choose your development environment: conda, venv or system python (see below).
 Note, that since the container is completely isolated you don't *have to* use conda or venv for isolation.
 If it's easy for you, just install things into the system. Here are some examples.
 
@@ -102,16 +94,16 @@ RUN /root/setup.sh
 The easiest and at the same time robust way to install requirements is to do with requirement locking.
 Read [here](https://pythonspeed.com/articles/conda-dependency-management/) about the similar technique in `conda`. 
 
- - Create `requirements.txt` (you can copy one from this repo - it has a nice torch and torchvision versions with appropriate cuda version).
- - ssh into the container (e.g. by running `./sandbox.sh`), cd into `/src` folder, you should find `requirements.txt` there
- - Run `pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt`
+ - Create `requirements.txt` (you can copy one from this repo `example/requirements.txt` - it has a nice torch and torchvision versions with appropriate cuda version).
+ - ssh into the container (e.g. by running `./sandbox.sh`), cd into `~/<YOUR_REPO_NAME>` folder, you should find `requirements.txt` there
+ - Run `pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt`. NOTE: you'll need at least 16GB RAM for this!
  - You should be able to find `requirements.txt.lock` file on your host repo now. Commit both files.
  - Add the following in your `Dockerfile`
 ```dockerfile
 COPY requirements.txt.lock requirements.txt.lock
 RUN python -m pip --no-cache-dir install --no-deps --ignore-installed -r requirements.txt.lock
 # Add the /src/ folder to pythonpath. A sandbox will mount there the default python code
-ENV PYTHONPATH "${PYTHONPATH}:/src/"
+ENV PYTHONPATH "${PYTHONPATH}:~/<YOUR_REPO_NAME>"
 ```
 
 Also notice, that you can change system python version with `PYTHON_VERSION` variable in `sandbox.sh` (tested with 3.8 and 3.9 so far).
@@ -219,3 +211,92 @@ invalid argument <XXX> for "-t, --tag" flag: invalid reference format: repositor
 Docker wants full lowercase name for the image. Use lowercase in `sandbox.sh`, `PROJECT_NAME` variable.
 
 
+# Google Cloud setup
+
+## Make ssh key for your dev instances
+https://cloud.google.com/compute/docs/connect/create-ssh-keys
+The `USERNAME` below is your 
+```bash
+ssh-keygen -t rsa -f ~/.ssh/gce_key -C <USERNAME> -b 2048
+```
+To see the generated public key that you're going to add to GCE:
+```bash
+cat ~/.ssh/gce_key.pub 
+```
+(optional) Add this ssh key [globally](https://cloud.google.com/compute/docs/connect/add-ssh-keys)
+
+## Create the cheapest test CPU VM to practice from scratch
+
+Go to [Google Compute Engine (GCE)](https://console.cloud.google.com/compute), turn on GCE API.
+You should see creating
+Create a VM with the following options:
+ - default region is the cheapest
+ - E2 is a good cheapest option, but you need at least 16GB of RAM if you'll use `pip`
+ - "Availability policies", choose "Spot" to save money
+ - Check "Enable display service"
+ - Boot disk, "Change", Choose Ubuntu 20.04
+ - Boot disk, "Change", make it at least 20Gb (10 is not enough)
+ - Firewall, check "Allow HTTP/HTTPS traffic"
+ - Advanced options, Disks, Add new disk, pick "Standard" (cheapest)
+ - Advanced options, Security, Manage Access, Add manually generated SSH keys, add the content of `~/.ssh/gce_key.pub`
+
+Now create the instance, you should see a green checkmark in "Status" column.
+
+Add this to your `~/.ssh/config`. Your `USERNAME` is what's before your `@gmail.com`.
+`EXTERNAL_IP` is what you see in "External IP" column of your running instance
+```shell
+Host gce
+  HostName <EXTERNAL_IP>
+  User <USERNAME>
+  IdentityFile ~/.ssh/gce_key
+```
+
+You should be able to login `ssh gce` from your laptop.
+Call `sudo passwd` to change the password.
+
+### Format your empty disk
+Follow (this tutorial)[https://cloud.google.com/compute/docs/disks/format-mount-disk-linux].
+In short:
+```
+sudo lsblk
+# you should see your large disk size under sdb. Now create the filesystem
+sudo mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
+# mount the disk
+sudo mkdir -p /mnt/disks/disk-1
+sudo mount -o discard,defaults /dev/sdb /mnt/disks/disk-1
+# mount on boot
+sudo blkid /dev/sdb
+sudo vim /etc/fstab , Shift+G, o
+# add this:
+UUID="<UUID_FROM_ABOVE>" /mnt/disks/disk-1 ext4 discard,defaults 0 2
+```
+
+## Move home folder onto the large drive:
+```
+cd /mnt/disks/disk-1
+mkdir -p home/<USERNAME> 
+sudo rsync -avz --progress /home/<USERNAME>/ /mnt/disks/disk-1/home/<USERNAME>/
+sudo vim /etc/passwd
+# find your username entry and change /home/<USERNAME> to /mnt/disks/disk-1/home/<USERNAME>
+sudo chown -R <USERNAME> <USERNAME> /mnt/disks/disk-1/home/<USERNAME> 
+sudo reboot
+```
+Now when you ssh again into `~` and call `pwd` you should see `/mnt/disks/disk-1/home/<USERNAME> `
+
+
+## Setup github keys
+
+```bash
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
+```
+
+Add a `~/.ssh/gce_key` to your GitHub account.
+Copy the keys from your laptop to the dev VM:
+`scp ~/.ssh/gce_key* gce:~/.ssh/`
+Add the following at the end of `~/.bashrc`
+```bash
+eval $(ssh-agent)
+ssh-add ~/.ssh/gce_key
+```
+Now you should be able to clone your repo.
