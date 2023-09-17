@@ -14,7 +14,7 @@ Doesn't optimize (less attention to https://pythonspeed.com/articles/official-do
 
 Features:
  - opengl and graphics (`glxgears` works)
- - desktop GUI via browser
+ - desktop GUI via browser (VNC is open at `<this_ip>:8080/vnc.html` by default)
  - passwordless ssh access
  - GPU training (e.g. with Torch)
  
@@ -94,7 +94,7 @@ RUN /root/setup.sh
 The easiest and at the same time robust way to install requirements is to do with requirement locking.
 Read [here](https://pythonspeed.com/articles/conda-dependency-management/) about the similar technique in `conda`. 
 
- - Create `requirements.txt` (you can copy one from this repo `example/requirements.txt` - it has a nice torch and torchvision versions with appropriate cuda version).
+ - Create `requirements.txt`.
  - ssh into the container (e.g. by running `./sandbox.sh`), cd into `~/<YOUR_REPO_NAME>` folder, you should find `requirements.txt` there
  - Run `pip-compile --generate-hashes --output-file=requirements.txt.lock --resolver=backtracking requirements.txt`. NOTE: you'll need at least 16GB RAM for this!
  - You should be able to find `requirements.txt.lock` file on your host repo now. Commit both files.
@@ -143,42 +143,15 @@ WORKDIR /home/docker/folder_to_install
 RUN pip install -e .
 ```
 
+# Use GUI utils (e.g. matplotlib) with VNC
 
-# This is based on the following images/tutorials
+When sandbox is running, you can open `<this_ip>:8080/vnc.html` and see a simple desktop.
+You can run GUI utils there, e.g. `matplotlib`, `opencv` or `pygame`.
 
-Install docker deepo container dependencies so that it works (you don't need deepo itself):
-`https://github.com/ufoym/deepo`
+The sandbox supports 3d rendering: check that GPU rendering works with `glxgears` (you should see a spinning gear).
+So you can run 3d simulators like `gym` or `pybullet` there.
 
-Enable default gpu support by picking nvidia runtime: 
-`https://stackoverflow.com/questions/59652992/pycharm-debugging-using-docker-with-gpus`
-
-Make docker daemon available on a fixed port:
-`https://dockerlabs.collabnix.com/beginners/components/daemon/access-daemon-externally.html`
-
-# run MNIST training and some random examples
-TODO: add requirements example
-```bash
-python example/mnist.py
-python example/examples.py
-```
-
-# How VNC works
-`xvfb` - create a virtual X11 display
-`fluxbox` - uses a virtual X11 and creates a windowmanager (`xterm` - adds a terminal)
-`X11Vnc` - exposes all that via VNC server (makes it available for VNC clients)
-`websockify` - translates WebSockets traffic to normal socket traffic to be available via browser
-
-# How to build cudagl base image
-Install `https://github.com/docker/buildx`.
-Clone `https://gitlab.com/nvidia/container-images/cuda`
-
-Run `build.sh` from `https://gitlab.com/nvidia/container-images/cuda/-/blob/master/build.sh`
-This is an example (you can add ` --push` to push the image):
-```bash
-./build.sh -d --image-name <yourname>/cudagl --cuda-version 11.6.1 --os ubuntu --os-version 20.04 --arch x86_64 --cudagl
-```
-
-# How to setup proxy jump ssh
+## How to setup proxy jump ssh
 Copy your keys from your development laptop to the remote server:
 ```
 scp ~/.ssh/id_ed25519 <ssh_name_of_the_server>:~/.ssh/
@@ -300,3 +273,32 @@ eval $(ssh-agent)
 ssh-add ~/.ssh/gce_key
 ```
 Now you should be able to clone your repo.
+
+
+## MISC
+### This is based on the following images/tutorials
+
+Install docker deepo container dependencies so that it works (you don't need deepo itself):
+`https://github.com/ufoym/deepo`
+
+Enable default gpu support by picking nvidia runtime: 
+`https://stackoverflow.com/questions/59652992/pycharm-debugging-using-docker-with-gpus`
+
+Make docker daemon available on a fixed port:
+`https://dockerlabs.collabnix.com/beginners/components/daemon/access-daemon-externally.html`
+
+### How VNC works
+`xvfb` - create a virtual X11 display
+`fluxbox` - uses a virtual X11 and creates a windowmanager (`xterm` - adds a terminal)
+`X11Vnc` - exposes all that via VNC server (makes it available for VNC clients)
+`websockify` - translates WebSockets traffic to normal socket traffic to be available via browser
+
+### How to build cudagl base image
+Install `https://github.com/docker/buildx`.
+Clone `https://gitlab.com/nvidia/container-images/cuda`
+
+Run `build.sh` from `https://gitlab.com/nvidia/container-images/cuda/-/blob/master/build.sh`
+This is an example (you can add ` --push` to push the image):
+```bash
+./build.sh -d --image-name <yourname>/cudagl --cuda-version 11.6.1 --os ubuntu --os-version 20.04 --arch x86_64 --cudagl
+```
