@@ -227,10 +227,10 @@ Host gce
 You should be able to login `ssh gce` from your laptop.
 Call `sudo passwd` to change the password.
 
-### Format your empty disk
+### Format your empty disk or attach existing disk
 Follow (this tutorial)[https://cloud.google.com/compute/docs/disks/format-mount-disk-linux].
-In short:
-```
+In short, for empty disk:
+```bash
 sudo lsblk
 # you should see your large disk size under sdb. Now create the filesystem
 sudo mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
@@ -238,23 +238,38 @@ sudo mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
 sudo mkdir -p /mnt/disks/disk-1
 sudo mount -o discard,defaults /dev/sdb /mnt/disks/disk-1
 # mount on boot
+# copy UUID returned by the following command:
 sudo blkid /dev/sdb
+# then
 sudo vim /etc/fstab , Shift+G, o
 # add this:
 UUID="<UUID_FROM_ABOVE>" /mnt/disks/disk-1 ext4 discard,defaults 0 2
 ```
+If you attached an existing disk and you used a debian deep learning image,
+the disk is by default mounted to `/home/jupyter`
 
-## Move home folder onto the large drive:
+## Move home folder onto new large drive:
+If you used a debian deep learning image, see below.
+For a new mounted image:
 ```
 cd /mnt/disks/disk-1
 mkdir -p home/<USERNAME> 
 sudo rsync -avz --progress /home/<USERNAME>/ /mnt/disks/disk-1/home/<USERNAME>/
 sudo vim /etc/passwd
 # find your username entry and change /home/<USERNAME> to /mnt/disks/disk-1/home/<USERNAME>
-sudo chown -R <USERNAME> <USERNAME> /mnt/disks/disk-1/home/<USERNAME> 
+sudo chown -R <USERNAME>:<USERNAME> /mnt/disks/disk-1/home/<USERNAME> 
 sudo reboot
 ```
-Now when you ssh again into `~` and call `pwd` you should see `/mnt/disks/disk-1/home/<USERNAME> `
+
+If you used a debian deep learning image, the disk is by default mounted to `/home/jupyter`
+```bash
+sudo vim /etc/passwd
+# find your username entry and change /home/<USERNAME> to /home/jupyter/home/<USERNAME>
+sudo chown -R <USERNAME>:<USERNAME> /home/jupyter/home/<USERNAME>
+sudo reboot
+```
+
+Now when you ssh again into `~` and call `pwd` you should see your new home location.
 
 
 ## Setup github keys
@@ -269,11 +284,23 @@ Copy the keys from your laptop to the dev VM:
 `scp ~/.ssh/gce_key* gce:~/.ssh/`
 Add the following at the end of `~/.bashrc`
 ```bash
+# If not running interactively, return early
+# https://stackoverflow.com/questions/64790393/indicated-packet-length-too-large-error-when-using-remote-interpreter-in-pycha
+[[ $- == *i* ]] || return
 eval $(ssh-agent)
 ssh-add ~/.ssh/gce_key
 ```
 Now you should be able to clone your repo.
 
+Install GPU drivers running [this](https://github.com/GoogleCloudPlatform/compute-gpu-installation/blob/main/linux/startup_script.sh).
+
+
+
+If you're running GCE deeplearning image, disable jupyter service:
+```
+sudo systemctl stop jupyter.service
+sudo systemctl disable jupyter.service
+```
 
 ## MISC
 ### This is based on the following images/tutorials
