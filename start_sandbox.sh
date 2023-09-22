@@ -22,7 +22,6 @@ if [ -z "$pub_key_file" ]; then
   echo "No public key file found in ~/.ssh directory - ssh will not work"
 fi
 
-#GPUS="device=4"
 GPUS="all"
 
 if lspci | grep -q NVIDIA; then
