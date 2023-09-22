@@ -17,7 +17,7 @@ Features:
  - opengl and graphics (`glxgears` works)
  - desktop GUI via browser (VNC is open at `<this_ip>:8080/vnc.html` by default)
  - passwordless ssh access
- - GPU training (e.g. with Torch)
+ - GPU training [example](https://github.com/olegsinavski/dl_dev) with PyTorch and Lightning
  - [Goolge cloud setup](GoogleCloudSetup.md)
  
 # New repo setup
