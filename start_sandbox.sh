@@ -22,11 +22,15 @@ if [ -z "$pub_key_file" ]; then
   echo "No public key file found in ~/.ssh directory - ssh will not work"
 fi
 
-#GPUS="device=4"
 GPUS="all"
 
 if lspci | grep -q NVIDIA; then
-  GPU_FLAG="--gpus=\"$GPUS\",\"capabilities=compute,utility,graphics,display\""
+  if which nvidia-smi >/dev/null 2>&1; then
+    GPU_FLAG="--gpus=\"$GPUS\",\"capabilities=compute,utility,graphics,display\""
+  else
+    echo "GPUs detected, but can't use it: nvidia-smi is not available"
+    GPU_FLAG=""
+  fi
 else
   GPU_FLAG=""
   echo "No GPUs detected"
